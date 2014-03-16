@@ -12,29 +12,41 @@ def getrestaurants():
     html = urllib2.urlopen(url).read()
     htmlparts = html.split('<span id="head-')
 
+    ignores = [
+        'Copyrights',
+    ]
+
     restaurants = []
     for i in range(1,len(htmlparts)):
         
         htmlparts[i] = "<span id={0}".format(htmlparts[i])
         soup = BeautifulSoup(htmlparts[i])
         atags = soup.findAll('a',href=True)
-        
+        h3s = soup.findAll('h3')        
+
         # gross ...
+        for h in h3s:
+            town = h.string
+            break
+
         for t in atags:
             atag = t
-            break
-        
-        name = '{0}'.format(atag.string.strip().encode('utf-8'))
 
-        rawhref = atag['href']
+            if atag.string == None or atag.string in ignores:
+                continue
+
+            name = '{0}'.format(atag.string.strip().encode('utf-8'))
+
+            rawhref = atag['href']
         
-        if rawhref[0] == '/':
-            abslink = urljoin(siteurl,rawhref)
-            restaurant = {
-                'name': name,
-                'url': abslink
-            }
-            restaurants.append(restaurant)    
+            if rawhref[0] == '/':
+                abslink = urljoin(siteurl,rawhref)
+                restaurant = {
+                    'town': town,
+                    'name': name,
+                    'url': abslink,
+                }
+                restaurants.append(restaurant)    
 
     return restaurants
 
